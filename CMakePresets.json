@@ -19,7 +19,7 @@
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "LRB_BUILD_ROOT": "G:/skyrim-build/LockpickRevealBar",
-        "VCPKG_INSTALLED_DIR": "G:/skyrim-shared/vcpkg/installed/commonlibsse-ng/msvc-$env{VCToolsVersion}",
+        "VCPKG_INSTALLED_DIR": "G:/skyrim-build/LockpickRevealBar/vcpkg_installed/msvc-$env{VCToolsVersion}",
         "VCPKG_TARGET_TRIPLET": "x64-windows-static-md",
         "BUILD_TESTING": "ON"
       }

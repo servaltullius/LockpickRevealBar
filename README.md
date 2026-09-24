@@ -14,9 +14,13 @@
 
 ## 요구 사항
 
-- SKSE64
-- Address Library for SKSE Plugins
-- 게임 버전: SE 1.5.x, AE 1.6.x(1.6.1170 포함), 1.7.x
+DLL 하나로 아래 세 버전을 모두 지원합니다. 게임 버전에 맞는 SKSE64와 Address Library for SKSE Plugins가 필요합니다.
+
+| 게임 버전 | SKSE64 | Address Library | 상태 |
+|---|---|---|---|
+| SE 1.5.97 | 2.0.20 | SE용 (`version-1-5-97-0.bin`) | 지원 (인게임 미검증) |
+| AE 1.6.1170 | 2.2.6 | AE용 (`versionlib-1-6-1170-0.bin`) | 인게임 테스트 완료 |
+| AE 1.7.104 (최신) | 2.3.1 | 1.7.104용 v13 (새 형식) | 지원 (인게임 미검증) |
 
 ## 설치
 
@@ -26,7 +30,7 @@
 
 ## 빌드
 
-`build.bat`을 실행하면 configure → 빌드 → 테스트 → 패키징(`G:\skyrim-build\LockpickRevealBar\` 아래 폴더와 MO2용 zip)까지 진행됩니다. 필요한 환경은 VS 2022 v143, `%USERPROFILE%\vcpkg`, 그리고 공유 설치 디렉터리 `G:\skyrim-shared\vcpkg\installed\commonlibsse-ng`의 CommonLibSSE-NG입니다.
+`build.bat`을 실행하면 configure → 빌드 → 테스트 → 패키징(`G:\skyrim-build\LockpickRevealBar\` 아래 폴더와 MO2용 zip)까지 진행됩니다. 필요한 환경은 VS 2022 v143과 `%USERPROFILE%\vcpkg`입니다. CommonLibSSE-NG([alandtse](https://github.com/alandtse/CommonLibSSE-NG) v9.0.2)는 `external/` 서브모듈로 들어 있으니, 처음 받았다면 `git submodule update --init`을 먼저 실행하세요. 1.7.x의 Address Library는 새 형식(v5)이라, CommonLibSSE-NG 3.7.0 이하로 빌드하면 1.7에서 로드에 실패합니다.
 
 ## 구현 메모
 
@@ -41,7 +45,7 @@
 | partialPickAngle | 0x100 | 0x114 | 좌우 부분 회전 구간 폭 |
 | numBrokenPicks | 0x104 | 0x118 | 이번 세션에서 부러진 락픽 수 |
 
-1.7.x에서는 `pickBreakSeconds` 뒤에 0x14바이트가 추가되었습니다. 그래서 CommonLibSSE-NG 3.7.0의 `RUNTIME_DATA` 레이아웃은 0xEC 이후 필드가 맞지 않습니다. legacy 오프셋은 CommonLibSSE-NG 정의 기준입니다. 1.6.1170 exe는 Steam DRM으로 암호화되어 있어 디스어셈블로 대조하지는 못했고, 인게임 테스트로 확인했습니다(2026-09-24). 바가 가리킨 위치에서 전문가 자물쇠가 열렸고, 락픽이 부러질 때마다 스타일이 다시 굴려지는 것도 확인했습니다.
+1.7.x에서는 `pickBreakSeconds` 뒤에 0x14바이트가 추가되었습니다. 그래서 CommonLib의 `RUNTIME_DATA`를 그대로 쓰면 0xEC 이후 필드를 잘못 읽습니다. CommonLibSSE-NG v9도 1.7.99 이상에서 0x110부터 `float, float, uint32, bool...`이 있다고 기록하고 있는데, 이는 폭·부분 구간·부러진 개수가 밀려난 결과와 일치합니다. legacy 오프셋은 CommonLibSSE-NG 정의 기준입니다. 1.6.1170 exe는 Steam DRM으로 암호화되어 있어 디스어셈블로 대조하지는 못했고, 인게임 테스트로 확인했습니다(2026-09-24). 바가 가리킨 위치에서 전문가 자물쇠가 열렸고, 락픽이 부러질 때마다 스타일이 다시 굴려지는 것도 확인했습니다.
 
 훅 대상은 `LockpickingMenu` vtable입니다.
 
@@ -62,4 +66,4 @@
 
 ## 라이선스
 
-[MIT](LICENSE)
+이 저장소의 소스 코드는 [MIT](LICENSE)입니다. 배포되는 DLL은 GPL-3.0인 CommonLibSSE-NG를 정적 링크하므로, 바이너리 배포에는 GPL-3.0 조건이 적용됩니다.
