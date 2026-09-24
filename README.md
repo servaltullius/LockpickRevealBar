@@ -20,13 +20,13 @@
 
 ## 설치
 
-`G:\skyrim-build\LockpickRevealBar\package` 폴더(`SKSE\Plugins\LockpickRevealBar.dll`, `.ini`)를 MO2 새 모드로 추가하세요. 수동 설치라면 게임 `Data` 폴더에 복사하면 됩니다.
+[Releases](https://github.com/servaltullius/LockpickRevealBar/releases)에서 `LockpickRevealBar-x.y.z.zip`을 받아 MO2의 "아카이브에서 모드 설치"로 설치하세요. 수동 설치라면 압축 안의 `SKSE` 폴더를 게임 `Data` 폴더에 복사하면 됩니다.
 
 설정은 `SKSE\Plugins\LockpickRevealBar.ini`에 있고 항목마다 한글 주석이 달려 있습니다.
 
 ## 빌드
 
-`build.bat`을 실행하면 configure → 빌드 → 테스트 → 패키징까지 진행됩니다. 필요한 환경은 VS 2022 v143, `%USERPROFILE%\vcpkg`, 그리고 공유 설치 디렉터리 `G:\skyrim-shared\vcpkg\installed\commonlibsse-ng`의 CommonLibSSE-NG입니다.
+`build.bat`을 실행하면 configure → 빌드 → 테스트 → 패키징(`G:\skyrim-build\LockpickRevealBar\` 아래 폴더와 MO2용 zip)까지 진행됩니다. 필요한 환경은 VS 2022 v143, `%USERPROFILE%\vcpkg`, 그리고 공유 설치 디렉터리 `G:\skyrim-shared\vcpkg\installed\commonlibsse-ng`의 CommonLibSSE-NG입니다.
 
 ## 구현 메모
 
@@ -55,7 +55,11 @@
 1. `Documents\My Games\Skyrim Special Edition\SKSE\LockpickRevealBar.log`에 다음 두 줄이 있는지 확인합니다.
    - `Runtime 1.6.1170... -> sweet spot layout legacy(SE/AE)`
    - `LockpickingMenu hooks installed`
-2. 자물쇠를 열면 `Lock ready: ... width=... partial=...` 줄이 찍히는지 확인합니다. 폭이 초보자 자물쇠는 대략 20~40, 마스터 자물쇠는 1~3 정도면 정상입니다.
+2. 자물쇠를 열면 `Lock ready: ... width=... partial=...` 줄이 찍히는지 확인합니다. 폭은 자물쇠 난이도와 스킬에 따라 다르며, 예를 들어 전문가 자물쇠에 스킬 10이면 0.56 정도였습니다.
 3. 바가 검정으로 시작해 락픽 위치 주변만 밝아지는지 확인합니다.
 4. `SweetSpotMarker=true`로 켜고, 표시된 칸에서 자물쇠가 끝까지 돌아가는지 확인합니다. 이게 레이아웃 검증입니다.
 5. 바가 안 뜨면 `DebugLog=true`로 원시 값을 확인하고, 필요하면 `Layout=legacy|shifted`를 바꿔봅니다.
+
+## 라이선스
+
+[MIT](LICENSE)
