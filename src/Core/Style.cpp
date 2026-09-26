@@ -43,16 +43,17 @@ namespace lrb
 
     float StyledHeat(const AttemptStyle& style, float heat, int cell)
     {
-        if (heat < kSweetHeat) {
-            if (style.bands > 0) {
-                heat = std::floor(heat * static_cast<float>(style.bands)) / static_cast<float>(style.bands);
-            }
-            if (style.noise > 0.0F) {
-                heat += style.noise * CellNoise(style.seed, cell);
-            }
-            heat = std::clamp(heat, 0.0F, kNonSweetCap);
+        if (heat >= kSweetHeat) {
+            return kSweetHeat;
         }
-        return style.inverted ? 1.0F - heat : heat;
+        if (style.bands > 0) {
+            heat = std::floor(heat * static_cast<float>(style.bands)) / static_cast<float>(style.bands);
+        }
+        if (style.noise > 0.0F) {
+            heat += style.noise * CellNoise(style.seed, cell);
+        }
+        heat = std::clamp(heat, 0.0F, kNonSweetCap);
+        return style.inverted ? kNonSweetCap - heat : heat;
     }
 
     std::uint32_t CellColor(

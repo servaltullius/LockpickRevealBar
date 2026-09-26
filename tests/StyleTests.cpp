@@ -49,7 +49,12 @@ int main()
         }
         s.noise = 0.0F;
         s.inverted = true;
-        test::Near(lrb::StyledHeat(s, 1.0F, 0), 0.0F, 0.0F, "inverted sweet at the cold end");
+        test::Near(lrb::StyledHeat(s, 1.0F, 0), 1.0F, 0.0F, "inversion never moves the sweet spot off the hot end");
+        test::Near(lrb::StyledHeat(s, 0.0F, 0), lrb::kNonSweetCap, 1e-6F, "inverted: farthest cell is the brightest non-sweet");
+        test::Near(lrb::StyledHeat(s, lrb::kPartialHigh, 0), lrb::kNonSweetCap - lrb::kPartialHigh, 1e-6F, "inverted: cells next to the sweet spot are dark");
+        for (float h = 0.0F; h < 1.0F; h += 0.01F) {
+            test::Expect(lrb::StyledHeat(s, h, 3) <= lrb::kNonSweetCap, "inverted non-sweet stays below the cap");
+        }
         s.inverted = false;
         s.bands = 4;
         test::Near(lrb::StyledHeat(s, 0.49F, 0), 0.25F, 1e-6F, "banding floors to steps");

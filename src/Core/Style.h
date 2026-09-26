@@ -11,7 +11,7 @@ namespace lrb
     struct AttemptStyle
     {
         int palette{ 0 };
-        bool inverted{ false };  // sweet spot shows as the cold end of the palette
+        bool inverted{ false };  // non-sweet gradient runs the other way (near = dark, far = bright)
         int bands{ 0 };          // 0 = smooth gradient
         float noise{ 0.0F };
         std::uint32_t seed{ 0 };
@@ -23,7 +23,8 @@ namespace lrb
 
     [[nodiscard]] AttemptStyle RollStyle(const Config& config, std::uint32_t seed);
 
-    // Heat after banding, noise and inversion. Sweet cells stay at the exact palette end.
+    // Heat after banding, noise and inversion. Sweet cells are always the palette's hot end;
+    // every other cell stays in [0, kNonSweetCap], so no inversion can make it look like the sweet spot.
     [[nodiscard]] float StyledHeat(const AttemptStyle& style, float heat, int cell);
 
     // Final cell color: black when unrevealed, brightening fog while being uncovered, the styled palette color once fully revealed.

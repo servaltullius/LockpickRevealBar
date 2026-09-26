@@ -9,10 +9,10 @@ namespace lrb
 
     // Heat bands. Gaps between bands make the zone borders readable once revealed,
     // and nothing but the sweet spot gets near the palette end it uses.
-    inline constexpr float kFarHigh = 0.50F;
-    inline constexpr float kPartialLow = 0.55F;
-    inline constexpr float kPartialHigh = 0.75F;
-    inline constexpr float kNonSweetCap = 0.78F;  // after banding and noise
+    inline constexpr float kFarHigh = 0.45F;
+    inline constexpr float kPartialLow = 0.50F;
+    inline constexpr float kPartialHigh = 0.66F;
+    inline constexpr float kNonSweetCap = 0.70F;  // after banding, noise and inversion
     inline constexpr float kSweetHeat = 1.0F;
 
     // Mirrors the game's own test: |pick - center| <= width / 2 opens the lock,

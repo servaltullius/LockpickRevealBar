@@ -72,4 +72,8 @@ if(BUILD_TESTING)
         target_link_libraries(${test_name} PRIVATE lrb_core)
         add_test(NAME ${test_name} COMMAND ${test_name})
     endforeach()
+
+    # Dev tool: renders every palette (normal and inverted) with the plugin's own color code.
+    add_executable(BarPreview tools/BarPreview.cpp)
+    target_link_libraries(BarPreview PRIVATE lrb_core)
 endif()
