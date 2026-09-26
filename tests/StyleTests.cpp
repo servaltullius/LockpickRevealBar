@@ -42,7 +42,12 @@ int main()
         lrb::AttemptStyle s;
         s.noise = 0.0F;
         test::Near(lrb::StyledHeat(s, 1.0F, 0), 1.0F, 0.0F, "sweet stays at the hot end");
-        test::Expect(lrb::StyledHeat(s, 0.89F, 0) < 1.0F, "non-sweet never reaches the sweet color");
+        test::Expect(lrb::StyledHeat(s, 0.99F, 0) <= lrb::kNonSweetCap, "non-sweet stays well below the sweet color");
+        s.noise = 0.5F;
+        for (int cell = 0; cell < 200; ++cell) {
+            test::Expect(lrb::StyledHeat(s, lrb::kPartialHigh, cell) <= lrb::kNonSweetCap, "noise cannot push a cell near the sweet color");
+        }
+        s.noise = 0.0F;
         s.inverted = true;
         test::Near(lrb::StyledHeat(s, 1.0F, 0), 0.0F, 0.0F, "inverted sweet at the cold end");
         s.inverted = false;
@@ -59,9 +64,12 @@ int main()
         s.palette = 5;  // mono
         test::Expect(lrb::CellColor(config, s, lock, -1.0F, 0.0F, 89, 0.0F) == 0x000000, "unrevealed is black");
         const auto half = lrb::CellColor(config, s, lock, -1.0F, 0.0F, 89, 0.5F);
+        const auto almost = lrb::CellColor(config, s, lock, -1.0F, 0.0F, 89, 0.99F);
         const auto full = lrb::CellColor(config, s, lock, -1.0F, 0.0F, 89, 1.0F);
-        test::Expect((half & 0xFF) < (full & 0xFF), "partial reveal is darker");
+        test::Expect(half == lrb::ScaleColor(lrb::kFogColor, 0.5F), "partial reveal is neutral fog, not a dimmed palette color");
+        test::Expect(almost == lrb::ScaleColor(lrb::kFogColor, 0.99F), "palette color only appears once fully revealed");
         test::Expect(full == lrb::SamplePalette(5, 1.0F), "fully revealed sweet cell is the palette end");
+        test::Expect((lrb::SamplePalette(5, 0.0F) & 0xFF) > (lrb::kFogColor & 0xFF), "coldest mono color is brighter than fog");
 
         lrb::Config marker = config;
         marker.sweetSpotMarker = true;
@@ -72,6 +80,12 @@ int main()
         test::Expect(lrb::SamplePalette(0, 0.0F) == 0x2A3CFF, "palette start stop");
         test::Expect(lrb::SamplePalette(0, 1.0F) == 0xFF3A1A, "palette end stop");
         test::Expect(lrb::ScaleColor(0xFF8040, 0.5F) == 0x804020, "scale color halves channels");
+    }
+    {
+        test::Expect(lrb::HealthColor(config, 1.0F) == config.healthColorHigh, "full health color");
+        test::Expect(lrb::HealthColor(config, 0.5F) == config.healthColorMid, "half health color");
+        test::Expect(lrb::HealthColor(config, 0.0F) == config.healthColorLow, "empty health color");
+        test::Expect(lrb::HealthColor(config, 2.0F) == config.healthColorHigh, "health clamps above 1");
     }
     return test::Finish("StyleTests");
 }

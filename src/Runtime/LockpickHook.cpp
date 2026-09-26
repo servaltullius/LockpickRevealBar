@@ -6,6 +6,7 @@
 #include "Core/RevealField.h"
 #include "Core/Style.h"
 #include "Runtime/BarRenderer.h"
+#include "Runtime/PickHealth.h"
 
 #include <RE/Skyrim.h>
 #include <SKSE/SKSE.h>
@@ -106,9 +107,9 @@ namespace
         if (g_config.debugLog && now - g_session.lastDebugLog > std::chrono::seconds(1)) {
             g_session.lastDebugLog = now;
             SKSE::log::info(
-                "[debug] layout={} center={:.3f} width={:.3f} partial={:.3f} pick={:.3f} lock={:.3f} broken={} skill={:.1f} plausible={}",
+                "[debug] layout={} center={:.3f} width={:.3f} partial={:.3f} pick={:.3f} lock={:.3f} broken={} skill={:.1f} health={:.3f} plausible={}",
                 lrb::LayoutName(g_layout), raw.center, raw.width, raw.partial, rd.pickAngle, rd.lockAngle,
-                ReadBrokenPicks(rd), PlayerLockpickingSkill(), lrb::IsPlausible(raw));
+                ReadBrokenPicks(rd), PlayerLockpickingSkill(), lrb::ReadPickHealth().value_or(-1.0F), lrb::IsPlausible(raw));
         }
 
         // Before the lock is rolled the fields are zero; wait instead of drawing garbage.
@@ -162,6 +163,9 @@ namespace
 
         const float fraction = (rd.pickAngle - lrb::kPickMin) / lrb::kPickRange;
         g_renderer.SetMarker(g_config.flipDirection ? 1.0F - fraction : fraction);
+
+        const auto health = lrb::ReadPickHealth();
+        g_renderer.SetHealth(health, health ? lrb::HealthColor(g_config, *health) : 0);
     }
 
     struct LockpickingMenuHooks
@@ -202,6 +206,10 @@ namespace lrb
         const auto version = REL::Module::get().version();
         g_layout = ResolveLayout(config.layout, version.major(), version.minor());
         SKSE::log::info("Runtime {} -> sweet spot layout {}", version.string(), LayoutName(g_layout));
+
+        if (config.showPickHealth) {
+            ResolvePickHealth();
+        }
 
         REL::Relocation<std::uintptr_t> vtbl{ RE::VTABLE_LockpickingMenu[0] };
         LockpickingMenuHooks::_ProcessMessage = vtbl.write_vfunc(0x4, LockpickingMenuHooks::ProcessMessage);

@@ -22,6 +22,8 @@ namespace lrb
         RE::GFxValue container;
         RE::GFxValue background;
         RE::GFxValue marker;
+        RE::GFxValue healthTrack;
+        RE::GFxValue healthFill;
         std::vector<RE::GFxValue> cells;
     };
 
@@ -73,6 +75,8 @@ namespace lrb
         for (int i = 0; created && i < cells; ++i) {
             created = createChild("c" + std::to_string(i), static_cast<double>(i + 1), clips->cells[static_cast<std::size_t>(i)]);
         }
+        created = created && createChild("hpTrack", static_cast<double>(cells + 5), clips->healthTrack);
+        created = created && createChild("hpFill", static_cast<double>(cells + 6), clips->healthFill);
         created = created && createChild("marker", static_cast<double>(cells + 10), clips->marker);
         if (!created) {
             SKSE::log::warn("Failed to create bar child clips");
@@ -107,7 +111,20 @@ namespace lrb
             clips->marker.SetDisplayInfo(info);
         }
 
+        // Durability line sits just below the marker's reach; hidden until a health value arrives.
+        _healthEnabled = config.showPickHealth;
+        _healthHeight = std::max(visibleH * config.healthHeightPct, 1.0);
+        _healthY0 = _y0 + _height + pad * 3.5;
+        {
+            auto& track = clips->healthTrack;
+            const std::array<RE::GFxValue, 3> line{ RE::GFxValue(1.0), RE::GFxValue(static_cast<double>(config.borderColor)), RE::GFxValue(_alpha) };
+            track.Invoke("lineStyle", line);
+            DrawRect(track, _x0 - pad, _healthY0 - pad, _x0 + _width + pad, _healthY0 + _healthHeight + pad, 0x000000, _alpha);
+        }
+        _healthDrawn = -2;
+
         _clips = std::move(clips);
+        SetHealthVisible(false);
         _drawn.assign(static_cast<std::size_t>(cells), -1);
         _lastMarkerX = -1.0;
         _movie = movie;
@@ -163,6 +180,45 @@ namespace lrb
         RE::GFxValue::DisplayInfo info;
         info.SetX(x);
         _clips->marker.SetDisplayInfo(info);
+    }
+
+    void BarRenderer::SetHealth(std::optional<float> health, std::uint32_t rgb)
+    {
+        if (!_clips) {
+            return;
+        }
+        if (!_healthEnabled || !health) {
+            if (_healthDrawn != -1) {
+                _healthDrawn = -1;
+                SetHealthVisible(false);
+            }
+            return;
+        }
+
+        const double fraction = std::clamp(static_cast<double>(*health), 0.0, 1.0);
+        // Quantize to 0.25% steps so a draining pick does not redraw on every tiny change.
+        const auto key = (static_cast<std::int64_t>(std::lround(fraction * 400.0)) << 24) | rgb;
+        if (key == _healthDrawn) {
+            return;
+        }
+        if (_healthDrawn < 0) {
+            SetHealthVisible(true);
+        }
+        _healthDrawn = key;
+
+        auto& fill = _clips->healthFill;
+        fill.Invoke("clear");
+        if (fraction > 0.0) {
+            DrawRect(fill, _x0, _healthY0, _x0 + _width * fraction, _healthY0 + _healthHeight, rgb, _alpha);
+        }
+    }
+
+    void BarRenderer::SetHealthVisible(bool visible)
+    {
+        RE::GFxValue::DisplayInfo info;
+        info.SetVisible(visible);
+        _clips->healthTrack.SetDisplayInfo(info);
+        _clips->healthFill.SetDisplayInfo(info);
     }
 
     void BarRenderer::DrawRect(RE::GFxValue& clip, double x0, double y0, double x1, double y1, std::uint32_t rgb, double alpha)

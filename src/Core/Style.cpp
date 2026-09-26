@@ -50,8 +50,7 @@ namespace lrb
             if (style.noise > 0.0F) {
                 heat += style.noise * CellNoise(style.seed, cell);
             }
-            // Keep a visible step between the hottest non-sweet cell and the sweet spot itself.
-            heat = std::clamp(heat, 0.0F, 0.9F);
+            heat = std::clamp(heat, 0.0F, kNonSweetCap);
         }
         return style.inverted ? 1.0F - heat : heat;
     }
@@ -68,6 +67,9 @@ namespace lrb
         if (reveal <= 0.0F) {
             return 0x000000;
         }
+        if (reveal < 1.0F) {
+            return ScaleColor(kFogColor, reveal);
+        }
 
         std::uint32_t base = 0;
         if (config.sweetSpotMarker && CellContainsSweetSpot(lock, cellMin, cellMax)) {
@@ -77,7 +79,13 @@ namespace lrb
             base = SamplePalette(style.palette, StyledHeat(style, heat, cell));
         }
 
-        // Ease-in so a barely revealed cell is still clearly darker than a finished one.
-        return ScaleColor(base, reveal * reveal * (3.0F - 2.0F * reveal));
+        return base;
+    }
+
+    std::uint32_t HealthColor(const Config& config, float health)
+    {
+        const float h = std::clamp(health, 0.0F, 1.0F);
+        return h < 0.5F ? MixColors(config.healthColorLow, config.healthColorMid, h * 2.0F)
+                        : MixColors(config.healthColorMid, config.healthColorHigh, (h - 0.5F) * 2.0F);
     }
 }

@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace RE
@@ -41,10 +42,14 @@ namespace lrb
         // `fraction` is 0 (left edge) .. 1 (right edge).
         void SetMarker(float fraction);
 
+        // Lockpick durability line under the bar; `health` in [0, 1], nothing hides it.
+        void SetHealth(std::optional<float> health, std::uint32_t rgb);
+
     private:
         struct Clips;
 
         void DrawRect(RE::GFxValue& clip, double x0, double y0, double x1, double y1, std::uint32_t rgb, double alpha);
+        void SetHealthVisible(bool visible);
 
         const RE::GFxMovieView* _movie{ nullptr };
         std::unique_ptr<Clips> _clips;
@@ -55,5 +60,9 @@ namespace lrb
         double _height{ 0.0 };
         double _alpha{ 100.0 };
         double _lastMarkerX{ -1.0 };
+        bool _healthEnabled{ false };
+        double _healthY0{ 0.0 };
+        double _healthHeight{ 0.0 };
+        std::int64_t _healthDrawn{ -2 };  // -2 = never drawn, -1 = hidden
     };
 }

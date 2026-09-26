@@ -54,7 +54,14 @@ namespace lrb
         int bandsMin{ 5 };
         int bandsMax{ 10 };
         float bandChance{ 0.5F };
-        float noise{ 0.05F };
+        float noise{ 0.03F };
+
+        // [PickHealth]
+        bool showPickHealth{ true };
+        float healthHeightPct{ 0.007F };
+        std::uint32_t healthColorHigh{ 0x5ED25E };
+        std::uint32_t healthColorMid{ 0xE8C547 };
+        std::uint32_t healthColorLow{ 0xE04B3A };
 
         [[nodiscard]] static Config Defaults();
     };

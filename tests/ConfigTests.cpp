@@ -34,6 +34,9 @@ int main()
             "RadiusAtSkill100=20\n"
             "[Obfuscation]\n"
             "InvertChance=0.25\n"
+            "[PickHealth]\n"
+            "ShowPickHealth=false\n"
+            "HealthColorLow=#FF0000\n"
             "BandsMin=8\n"
             "BandsMax=3\n");
         const auto c = lrb::LoadConfig(path);
@@ -47,6 +50,8 @@ int main()
         test::Near(c.radiusAtSkill100, 20.0F, 1e-6F, "float value");
         test::Near(c.invertChance, 0.25F, 1e-6F, "invert chance");
         test::Expect(c.bandsMax == 8, "BandsMax raised to BandsMin");
+        test::Expect(!c.showPickHealth, "ShowPickHealth=false");
+        test::Expect(c.healthColorLow == 0xFF0000, "HealthColorLow");
     }
     {
         const auto path = WriteTemp("lrb_bad.ini",
@@ -59,7 +64,7 @@ int main()
         std::filesystem::remove(path);
         test::Expect(c.cells == 30, "Cells clamped to minimum 30 after invalid entry");
         test::Near(c.alpha, 100.0F, 1e-6F, "Alpha clamped to 100");
-        test::Near(c.noise, 0.05F, 1e-6F, "empty value keeps default");
+        test::Near(c.noise, 0.03F, 1e-6F, "empty value keeps default");
         test::Expect(c.borderColor == 0x5A5A5A, "bad color keeps default");
     }
     return test::Finish("ConfigTests");

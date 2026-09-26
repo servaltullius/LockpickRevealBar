@@ -1,6 +1,6 @@
 {
   "name": "lockpick-reveal-bar",
-  "version-string": "0.2.0",
+  "version-string": "0.3.0",
   "builtin-baseline": "ee12231b20c95013c6638d845d04c91559a1d1ff",
   "dependencies": [
     {

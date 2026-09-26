@@ -19,7 +19,7 @@ namespace
     constexpr std::array<std::uint32_t, 4> kToxic{ 0x1E5A2A, 0x2FA04A, 0xB4F040, 0xF4FFE0 };
     constexpr std::array<std::uint32_t, 4> kArcane{ 0x4A2A7A, 0x8A3CD0, 0xE070FF, 0xFFF0FF };
     constexpr std::array<std::uint32_t, 4> kFrost{ 0x1A3A6A, 0x1878C0, 0x50D8FF, 0xF0FFFF };
-    constexpr std::array<std::uint32_t, 2> kMono{ 0x3C3C3C, 0xF4F4F4 };
+    constexpr std::array<std::uint32_t, 2> kMono{ 0x5A5A5A, 0xF4F4F4 };
     constexpr std::array<std::uint32_t, 3> kBlood{ 0x3A3A48, 0x9A2030, 0xFF6060 };
 
     constexpr std::array<Palette, 7> kPalettes{ {
@@ -68,6 +68,11 @@ namespace lrb
         const float scaled = std::clamp(t, 0.0F, 1.0F) * static_cast<float>(stops.size() - 1);
         const auto lo = std::min(static_cast<std::size_t>(scaled), stops.size() - 2);
         return Mix(stops[lo], stops[lo + 1], scaled - static_cast<float>(lo));
+    }
+
+    std::uint32_t MixColors(std::uint32_t a, std::uint32_t b, float t)
+    {
+        return Mix(a, b, std::clamp(t, 0.0F, 1.0F));
     }
 
     std::uint32_t ScaleColor(std::uint32_t rgb, float brightness)

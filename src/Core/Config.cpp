@@ -193,6 +193,16 @@ namespace lrb
                 ParseFloatInto(value, c.bandChance, 0.0F, 1.0F);
             } else if (key == "noise") {
                 ParseFloatInto(value, c.noise, 0.0F, 0.5F);
+            } else if (key == "showpickhealth") {
+                ParseBoolInto(value, c.showPickHealth);
+            } else if (key == "healthheightpct") {
+                ParseFloatInto(value, c.healthHeightPct, 0.001F, 0.1F);
+            } else if (key == "healthcolorhigh") {
+                ParseColorInto(value, c.healthColorHigh);
+            } else if (key == "healthcolormid") {
+                ParseColorInto(value, c.healthColorMid);
+            } else if (key == "healthcolorlow") {
+                ParseColorInto(value, c.healthColorLow);
             }
         }
 

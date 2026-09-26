@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(LockpickRevealBar VERSION 0.2.0 LANGUAGES CXX)
+project(LockpickRevealBar VERSION 0.3.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -31,6 +31,7 @@ add_library(lrb_core STATIC
     src/Core/Heat.cpp
     src/Core/LockLayout.cpp
     src/Core/Palette.cpp
+    src/Core/PickHealthScan.cpp
     src/Core/RevealField.cpp
     src/Core/Style.cpp
 )
@@ -46,6 +47,7 @@ add_commonlibsse_plugin(${PROJECT_NAME}
 target_sources(${PROJECT_NAME} PRIVATE
     src/Runtime/BarRenderer.cpp
     src/Runtime/LockpickHook.cpp
+    src/Runtime/PickHealth.cpp
 )
 target_precompile_headers(${PROJECT_NAME} PRIVATE src/PCH.h)
 # CommonLib v9 pulls in <Windows.h>; keep its min/max macros away from std::min/std::max.
@@ -65,7 +67,7 @@ add_custom_target(package_mod
 )
 
 if(BUILD_TESTING)
-    foreach(test_name ConfigTests HeatTests LockLayoutTests RevealFieldTests StyleTests)
+    foreach(test_name ConfigTests HeatTests LockLayoutTests PickHealthScanTests RevealFieldTests StyleTests)
         add_executable(${test_name} tests/${test_name}.cpp)
         target_link_libraries(${test_name} PRIVATE lrb_core)
         add_test(NAME ${test_name} COMMAND ${test_name})
