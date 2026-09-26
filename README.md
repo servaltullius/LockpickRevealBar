@@ -1,5 +1,7 @@
 # Lockpick Reveal Bar (락픽 탐지 바)
 
+[Nexus Mods](https://www.nexusmods.com/skyrimspecialedition/mods/193116) · [GitHub Releases](https://github.com/servaltullius/LockpickRevealBar/releases)
+
 자물쇠 따기 화면 위쪽에 새까만 바를 띄우는 SKSE 플러그인입니다. 락픽을 대고 있는 부분만 서서히 밝아지고, 밝아진 칸의 색이 스윗스팟과의 거리를 알려줍니다.
 
 - 잠금해제 스킬(강화 효과 포함 현재 값)이 높을수록 한 번에 밝혀지는 범위가 넓고 속도가 빠릅니다.
@@ -24,7 +26,7 @@ DLL 하나로 아래 세 버전을 모두 지원합니다. 게임 버전에 맞�
 
 ## 설치
 
-[Releases](https://github.com/servaltullius/LockpickRevealBar/releases)에서 `LockpickRevealBar-x.y.z.zip`을 받아 MO2의 "아카이브에서 모드 설치"로 설치하세요. 수동 설치라면 압축 안의 `SKSE` 폴더를 게임 `Data` 폴더에 복사하면 됩니다.
+[Nexus Mods](https://www.nexusmods.com/skyrimspecialedition/mods/193116) 또는 [Releases](https://github.com/servaltullius/LockpickRevealBar/releases)에서 `LockpickRevealBar-x.y.z.zip`을 받아 MO2의 "아카이브에서 모드 설치"로 설치하세요. 수동 설치라면 압축 안의 `SKSE` 폴더를 게임 `Data` 폴더에 복사하면 됩니다.
 
 설정은 `SKSE\Plugins\LockpickRevealBar.ini`에 있고 항목마다 한글 주석이 달려 있습니다.
 
