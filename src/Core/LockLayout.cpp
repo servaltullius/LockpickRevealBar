@@ -18,8 +18,9 @@ namespace lrb
         if (v.partial != 0.0F && (v.partial < 0.01F || v.partial > kPickRange)) {
             return false;
         }
-        // The game rolls the center inside [-90 + w/2, 90 - w/2].
-        return std::fabs(v.center) <= kPickMax - v.width * 0.5F + 0.01F;
+        // The game rolls the center inside [-90 + w/2, 90 - w/2], but other mods may widen the zone
+        // afterwards, so only reject centers outside the pick range itself.
+        return std::fabs(v.center) <= kPickMax + 0.01F;
     }
 
     Layout ResolveLayout(LayoutOverride override, int major, int minor)

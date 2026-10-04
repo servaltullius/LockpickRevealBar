@@ -35,16 +35,14 @@ namespace lrb
 {
     void ResolvePickHealth()
     {
-        const char* source = "none";
-        if (REL::Module::IsAE()) {
+        // The code scan is checked on 1.6.1170 (agrees with the ID) and 1.7.104 (unique match), and
+        // it is the only option on SE, which uses a different ID space. The AE ID is only a fallback,
+        // so a future AE database without it is never queried while the scan works.
+        const char* source = "code scan";
+        g_health = ScanTextSegment();
+        if (!g_health && REL::Module::IsAE()) {
             g_health = reinterpret_cast<const float*>(REL::ID(kAEPickHealthID).address());
             source = "address library";
-            // The scan is what SE relies on; report whether it agrees here so AE logs can vouch for it.
-            SKSE::log::info("Pick health code scan {} the address library", ScanTextSegment() == g_health ? "agrees with" : "does NOT match");
-        } else {
-            // SE uses a different ID space; find the global through the code that writes it.
-            g_health = ScanTextSegment();
-            source = "code scan";
         }
 
         if (g_health && !InRange(*g_health)) {

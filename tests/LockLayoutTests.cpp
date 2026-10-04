@@ -9,7 +9,8 @@ int main()
     test::Expect(lrb::IsPlausible(RawLockValues{ 12.0F, 7.5F, 18.0F }), "adept lock");
     test::Expect(lrb::IsPlausible(RawLockValues{ -88.0F, 3.0F, 10.0F }), "center near edge");
     test::Expect(!lrb::IsPlausible(RawLockValues{ 0.0F, 0.0F, 0.0F }), "unrolled lock");
-    test::Expect(!lrb::IsPlausible(RawLockValues{ 89.9F, 3.0F, 10.0F }), "center outside the rolled range");
+    test::Expect(lrb::IsPlausible(RawLockValues{ 89.0F, 4.0F, 10.0F }), "zone widened by another mod after the roll");
+    test::Expect(!lrb::IsPlausible(RawLockValues{ 90.5F, 3.0F, 10.0F }), "center outside the pick range");
     test::Expect(!lrb::IsPlausible(RawLockValues{ 0.0F, 1e-40F, 10.0F }), "denormal width");
     test::Expect(!lrb::IsPlausible(RawLockValues{ 0.0F, 5.0F, 1e-40F }), "denormal partial");
     test::Expect(!lrb::IsPlausible(RawLockValues{ std::numeric_limits<float>::quiet_NaN(), 5.0F, 5.0F }), "NaN center");
