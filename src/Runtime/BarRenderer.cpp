@@ -199,6 +199,7 @@ namespace lrb
         }
         if (!_healthEnabled || !health) {
             if (_healthDrawn != -1) {
+                SKSE::log::info("Durability line hidden (enabled={}, value={})", _healthEnabled, health.has_value());
                 _healthDrawn = -1;
                 SetHealthVisible(false);
             }
@@ -212,6 +213,8 @@ namespace lrb
             return;
         }
         if (_healthDrawn < 0) {
+            SKSE::log::info("Durability line shown at y={:.1f} h={:.1f} x={:.1f}..{:.1f} health={:.2f}",
+                _healthY0, _healthHeight, _x0, _x0 + _width, fraction);
             SetHealthVisible(true);
         }
         _healthDrawn = key;
@@ -246,7 +249,9 @@ namespace lrb
             return;
         }
         auto setAlpha = [](RE::GFxValue& clip, float alpha, float& last) {
-            if (std::fabs(alpha - last) < 0.5F) {
+            // Skip tiny steps, but always land on exactly 0 so a finished effect is really hidden.
+            const bool reachedZero = alpha <= 0.0F && last != 0.0F;
+            if (!reachedZero && std::fabs(alpha - last) < 0.5F) {
                 return;
             }
             last = alpha;
