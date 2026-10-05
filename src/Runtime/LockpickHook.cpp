@@ -1,5 +1,7 @@
 #include "Runtime/LockpickHook.h"
 
+#include "Core/Difficulty.h"
+#include "Core/Effects.h"
 #include "Core/Heat.h"
 #include "Core/LockLayout.h"
 #include "Core/Palette.h"
@@ -16,6 +18,9 @@
 #include <cstddef>
 #include <random>
 
+// <Windows.h> maps PlaySound to PlaySoundA, which would hide RE::PlaySound.
+#undef PlaySound
+
 namespace
 {
     using Clock = std::chrono::steady_clock;
@@ -28,6 +33,10 @@ namespace
         bool closed{ false };
         bool haveLock{ false };
         bool attachFailed{ false };
+        bool sweetFound{ false };
+        int lockLevel{ lrb::kNeutralLockLevel };
+        lrb::Config config;  // g_config adjusted for this lock's difficulty
+        lrb::BarEffects effects;
         lrb::LockGeometry lock;
         std::uint32_t brokenPicks{ 0 };
         lrb::AttemptStyle style;
@@ -67,9 +76,55 @@ namespace
         return player ? player->AsActorValueOwner()->GetActorValue(RE::ActorValue::kLockpicking) : 0.0F;
     }
 
+    [[nodiscard]] int TargetLockLevel()
+    {
+        const auto target = RE::LockpickingMenu::GetTargetReference();
+        if (!target) {
+            return lrb::kNeutralLockLevel;
+        }
+        const auto level = static_cast<int>(target->GetLockLevel());
+        return level >= 0 && level < lrb::kLockLevelCount ? level : lrb::kNeutralLockLevel;
+    }
+
+    // Flashes the sweet spot the first time any of its cells is fully revealed.
+    void CheckSweetSpotFound(int cells)
+    {
+        if (g_session.sweetFound) {
+            return;
+        }
+        int first = -1;
+        int last = -1;
+        for (int i = 0; i < cells; ++i) {
+            const auto& field = g_session.field;
+            if (field.Get(i) >= 1.0F && lrb::CellContainsSweetSpot(g_session.lock, field.CellMin(i), field.CellMax(i))) {
+                first = first < 0 ? i : first;
+                last = i;
+            }
+        }
+        if (first < 0) {
+            return;
+        }
+
+        g_session.sweetFound = true;
+        const auto& cfg = g_session.config;
+        if (cfg.sweetSpotFlash) {
+            float from = static_cast<float>(first) / static_cast<float>(cells);
+            float to = static_cast<float>(last + 1) / static_cast<float>(cells);
+            if (cfg.flipDirection) {
+                from = 1.0F - from;
+                to = 1.0F - to;
+            }
+            g_renderer.PlaceSweetFlash(from, to);
+            g_session.effects.TriggerSweetFlash();
+        }
+        if (!cfg.sweetSpotSound.empty()) {
+            RE::PlaySound(cfg.sweetSpotSound.c_str());
+        }
+    }
+
     void RollStyle(const char* reason)
     {
-        g_session.style = lrb::RollStyle(g_config, g_rng());
+        g_session.style = lrb::RollStyle(g_session.config, g_rng());
         const auto& s = g_session.style;
         SKSE::log::info("Style rolled ({}): palette={} inverted={} bands={}", reason, lrb::PaletteName(s.palette), s.inverted, s.bands);
     }
@@ -79,6 +134,7 @@ namespace
         // A renderer still attached here belongs to a menu that never sent kHide; its movie may be gone.
         g_renderer.Abandon();
         g_session = Session{};
+        g_session.config = g_config;
         g_session.lastTick = Clock::now();
     }
 
@@ -120,10 +176,13 @@ namespace
         const lrb::LockGeometry lock{ raw.center, raw.width, raw.partial };
         if (!g_session.haveLock || std::fabs(lock.center - g_session.lock.center) > 0.001F) {
             g_session.haveLock = true;
+            g_session.sweetFound = false;
+            g_session.lockLevel = TargetLockLevel();
+            g_session.config = lrb::ApplyDifficulty(g_config, g_session.lockLevel);
             g_session.brokenPicks = ReadBrokenPicks(rd);
-            g_session.field.Reset(g_config.cells);
-            SKSE::log::info("Lock ready: layout={} width={:.2f} partial={:.2f} skill={:.0f}",
-                lrb::LayoutName(g_layout), lock.width, lock.partial, PlayerLockpickingSkill());
+            g_session.field.Reset(g_session.config.cells);
+            SKSE::log::info("Lock ready: layout={} level={} width={:.2f} partial={:.2f} skill={:.0f}",
+                lrb::LayoutName(g_layout), lrb::LockLevelName(g_session.lockLevel), lock.width, lock.partial, PlayerLockpickingSkill());
             RollStyle("new lock");
         }
         // Other mods may rescale the zones mid-session; always use the live values.
@@ -132,40 +191,51 @@ namespace
         const auto broken = ReadBrokenPicks(rd);
         if (broken != g_session.brokenPicks) {
             g_session.brokenPicks = broken;
-            if (g_config.resetRevealOnPickBreak) {
-                g_session.field.Reset(g_config.cells);
+            const auto& cfg = g_session.config;
+            if (cfg.resetRevealOnPickBreak) {
+                g_session.field.Reset(cfg.cells);
+                g_session.sweetFound = false;
             }
-            if (g_config.rerollOnPickBreak) {
+            if (cfg.rerollOnPickBreak) {
                 RollStyle("pick broke");
+            }
+            if (cfg.breakFlash) {
+                g_session.effects.TriggerBreak(cfg.breakShake);
             }
         }
 
         if (!g_renderer.IsAttachedTo(movie)) {
             g_renderer.Abandon();
-            if (!g_renderer.Attach(movie, g_config, g_config.cells)) {
+            if (!g_renderer.Attach(movie, g_session.config, g_session.config.cells)) {
                 g_session.attachFailed = true;
                 SKSE::log::error("Could not attach the reveal bar to the lockpicking menu");
                 return;
             }
         }
 
+        const auto& cfg = g_session.config;
         const bool turning = rd.lockAngle > 0.5F;
-        const auto params = lrb::ComputeRevealParams(g_config, PlayerLockpickingSkill(), turning);
-        g_session.field.Step(rd.pickAngle, params, dt, g_config.fadePerSecond);
+        const auto params = lrb::ComputeRevealParams(cfg, PlayerLockpickingSkill(), turning);
+        g_session.field.Step(rd.pickAngle, params, dt, cfg.fadePerSecond);
 
         const int cells = g_session.field.Cells();
         for (int i = 0; i < cells; ++i) {
             const auto color = lrb::CellColor(
-                g_config, g_session.style, g_session.lock,
+                cfg, g_session.style, g_session.lock,
                 g_session.field.CellMin(i), g_session.field.CellMax(i), i, g_session.field.Get(i));
-            g_renderer.SetCellColor(g_config.flipDirection ? cells - 1 - i : i, color);
+            g_renderer.SetCellColor(cfg.flipDirection ? cells - 1 - i : i, color);
         }
+        CheckSweetSpotFound(cells);
 
         const float fraction = (rd.pickAngle - lrb::kPickMin) / lrb::kPickRange;
-        g_renderer.SetMarker(g_config.flipDirection ? 1.0F - fraction : fraction);
+        g_renderer.SetMarker(cfg.flipDirection ? 1.0F - fraction : fraction);
 
         const auto health = lrb::ReadPickHealth();
-        g_renderer.SetHealth(health, health ? lrb::HealthColor(g_config, *health) : 0);
+        g_renderer.SetHealth(health, health ? lrb::HealthColor(cfg, *health) : 0);
+
+        g_session.effects.Advance(dt);
+        auto& fx = g_session.effects;
+        g_renderer.SetEffects(fx.SweetFlashAlpha(), fx.BreakFlashAlpha(), fx.ShakeOffset());
     }
 
     struct LockpickingMenuHooks

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <string>
 
 namespace lrb
 {
@@ -62,6 +63,16 @@ namespace lrb
         std::uint32_t healthColorHigh{ 0x5ED25E };
         std::uint32_t healthColorMid{ 0xE8C547 };
         std::uint32_t healthColorLow{ 0xE04B3A };
+
+        // [Difficulty]
+        bool difficultyScaling{ true };
+        float difficultyStrength{ 1.0F };  // 0 = every lock plays like the base values above
+
+        // [Effects]
+        bool sweetSpotFlash{ true };
+        std::string sweetSpotSound{ "UIMenuFocus" };  // sound descriptor EditorID, empty = silent
+        bool breakFlash{ true };
+        bool breakShake{ true };
 
         [[nodiscard]] static Config Defaults();
     };

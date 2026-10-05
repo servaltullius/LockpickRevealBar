@@ -203,6 +203,18 @@ namespace lrb
                 ParseColorInto(value, c.healthColorMid);
             } else if (key == "healthcolorlow") {
                 ParseColorInto(value, c.healthColorLow);
+            } else if (key == "difficultyscaling") {
+                ParseBoolInto(value, c.difficultyScaling);
+            } else if (key == "difficultystrength") {
+                ParseFloatInto(value, c.difficultyStrength, 0.0F, 2.0F);
+            } else if (key == "sweetspotflash") {
+                ParseBoolInto(value, c.sweetSpotFlash);
+            } else if (key == "sweetspotsound") {
+                c.sweetSpotSound = Lower(value) == "none" ? std::string{} : value;
+            } else if (key == "breakflash") {
+                ParseBoolInto(value, c.breakFlash);
+            } else if (key == "breakshake") {
+                ParseBoolInto(value, c.breakShake);
             }
         }
 

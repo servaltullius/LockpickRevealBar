@@ -24,6 +24,8 @@ namespace lrb
         RE::GFxValue marker;
         RE::GFxValue healthTrack;
         RE::GFxValue healthFill;
+        RE::GFxValue sweetFlash;
+        RE::GFxValue breakFlash;
         std::vector<RE::GFxValue> cells;
     };
 
@@ -77,6 +79,8 @@ namespace lrb
         }
         created = created && createChild("hpTrack", static_cast<double>(cells + 5), clips->healthTrack);
         created = created && createChild("hpFill", static_cast<double>(cells + 6), clips->healthFill);
+        created = created && createChild("sweetFx", static_cast<double>(cells + 7), clips->sweetFlash);
+        created = created && createChild("breakFx", static_cast<double>(cells + 8), clips->breakFlash);
         created = created && createChild("marker", static_cast<double>(cells + 10), clips->marker);
         if (!created) {
             SKSE::log::warn("Failed to create bar child clips");
@@ -95,6 +99,7 @@ namespace lrb
 
         // Background with a thin frame; cells start black, i.e. "nothing known yet".
         const double pad = std::max(_height * 0.12, 1.0);
+        _pad = pad;
         {
             auto& bg = clips->background;
             const std::array<RE::GFxValue, 3> line{ RE::GFxValue(1.0), RE::GFxValue(static_cast<double>(config.borderColor)), RE::GFxValue(_alpha) };
@@ -123,7 +128,12 @@ namespace lrb
         }
         _healthDrawn = -2;
 
+        // Pick-break flash covers the bar and the durability line; both overlays start invisible.
+        DrawRect(clips->breakFlash, _x0 - pad, _y0 - pad, _x0 + _width + pad, _healthY0 + _healthHeight + pad, 0xE04B3A, 100.0);
+
         _clips = std::move(clips);
+        _lastSweetAlpha = _lastBreakAlpha = _lastShake = -1.0F;
+        SetEffects(0.0F, 0.0F, 0.0F);
         SetHealthVisible(false);
         _drawn.assign(static_cast<std::size_t>(cells), -1);
         _lastMarkerX = -1.0;
@@ -210,6 +220,49 @@ namespace lrb
         fill.Invoke("clear");
         if (fraction > 0.0) {
             DrawRect(fill, _x0, _healthY0, _x0 + _width * fraction, _healthY0 + _healthHeight, rgb, _alpha);
+        }
+    }
+
+    void BarRenderer::PlaceSweetFlash(float fromFraction, float toFraction)
+    {
+        if (!_clips) {
+            return;
+        }
+        const double lo = std::clamp(static_cast<double>(std::min(fromFraction, toFraction)), 0.0, 1.0);
+        const double hi = std::clamp(static_cast<double>(std::max(fromFraction, toFraction)), 0.0, 1.0);
+        // At least a few pixels wide so a sub-cell sweet spot still reads as a flash.
+        const double minWidth = std::max(_height * 0.6, 3.0);
+        const double mid = _x0 + _width * (lo + hi) * 0.5;
+        const double half = std::max(_width * (hi - lo), minWidth) * 0.5;
+
+        auto& flash = _clips->sweetFlash;
+        flash.Invoke("clear");
+        DrawRect(flash, mid - half, _y0 - _pad * 2.0, mid + half, _y0 + _height + _pad * 2.0, 0xFFFFFF, 100.0);
+    }
+
+    void BarRenderer::SetEffects(float sweetAlpha, float breakAlpha, float shake)
+    {
+        if (!_clips) {
+            return;
+        }
+        auto setAlpha = [](RE::GFxValue& clip, float alpha, float& last) {
+            if (std::fabs(alpha - last) < 0.5F) {
+                return;
+            }
+            last = alpha;
+            RE::GFxValue::DisplayInfo info;
+            info.SetAlpha(alpha);
+            info.SetVisible(alpha > 0.0F);
+            clip.SetDisplayInfo(info);
+        };
+        setAlpha(_clips->sweetFlash, sweetAlpha, _lastSweetAlpha);
+        setAlpha(_clips->breakFlash, breakAlpha, _lastBreakAlpha);
+
+        if (std::fabs(shake - _lastShake) >= 0.01F || (shake == 0.0F && _lastShake != 0.0F)) {
+            _lastShake = shake;
+            RE::GFxValue::DisplayInfo info;
+            info.SetX(shake * std::max(_height * 0.35, 2.0));
+            _clips->container.SetDisplayInfo(info);
         }
     }
 

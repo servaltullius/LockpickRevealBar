@@ -45,6 +45,12 @@ namespace lrb
         // Lockpick durability line under the bar; `health` in [0, 1], nothing hides it.
         void SetHealth(std::optional<float> health, std::uint32_t rgb);
 
+        // Places the sweet spot flash over [fromFraction, toFraction] of the bar.
+        void PlaceSweetFlash(float fromFraction, float toFraction);
+
+        // Per-frame effect state: overlay alphas in 0..100, shake as a multiple of the shake amplitude.
+        void SetEffects(float sweetAlpha, float breakAlpha, float shake);
+
     private:
         struct Clips;
 
@@ -64,5 +70,9 @@ namespace lrb
         double _healthY0{ 0.0 };
         double _healthHeight{ 0.0 };
         std::int64_t _healthDrawn{ -2 };  // -2 = never drawn, -1 = hidden
+        double _pad{ 1.0 };
+        float _lastSweetAlpha{ -1.0F };
+        float _lastBreakAlpha{ -1.0F };
+        float _lastShake{ -1.0F };
     };
 }

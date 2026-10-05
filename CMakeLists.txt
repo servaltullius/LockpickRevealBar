@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(LockpickRevealBar VERSION 0.3.1 LANGUAGES CXX)
+project(LockpickRevealBar VERSION 0.4.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -28,6 +28,8 @@ include(external/CommonLibSSE-NG/cmake/CommonLibSSE.cmake)
 
 add_library(lrb_core STATIC
     src/Core/Config.cpp
+    src/Core/Difficulty.cpp
+    src/Core/Effects.cpp
     src/Core/Heat.cpp
     src/Core/LockLayout.cpp
     src/Core/Palette.cpp
@@ -67,7 +69,7 @@ add_custom_target(package_mod
 )
 
 if(BUILD_TESTING)
-    foreach(test_name ConfigTests HeatTests LockLayoutTests PickHealthScanTests RevealFieldTests StyleTests)
+    foreach(test_name ConfigTests DifficultyTests EffectsTests HeatTests LockLayoutTests PickHealthScanTests RevealFieldTests StyleTests)
         add_executable(${test_name} tests/${test_name}.cpp)
         target_link_libraries(${test_name} PRIVATE lrb_core)
         add_test(NAME ${test_name} COMMAND ${test_name})

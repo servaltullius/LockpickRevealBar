@@ -19,6 +19,7 @@ int main()
     {
         const auto c = lrb::LoadConfig(std::filesystem::temp_directory_path() / "lrb_missing_file.ini");
         test::Expect(c.enable && c.cells == 180, "missing file yields defaults");
+        test::Expect(c.sweetSpotSound == "UIMenuFocus", "default sweet spot sound");
     }
     {
         const auto path = WriteTemp("lrb_happy.ini",
@@ -37,6 +38,11 @@ int main()
             "[PickHealth]\n"
             "ShowPickHealth=false\n"
             "HealthColorLow=#FF0000\n"
+            "[Difficulty]\n"
+            "DifficultyStrength=5\n"
+            "[Effects]\n"
+            "SweetSpotSound=None\n"
+            "BreakShake=false\n"
             "BandsMin=8\n"
             "BandsMax=3\n");
         const auto c = lrb::LoadConfig(path);
@@ -52,6 +58,9 @@ int main()
         test::Expect(c.bandsMax == 8, "BandsMax raised to BandsMin");
         test::Expect(!c.showPickHealth, "ShowPickHealth=false");
         test::Expect(c.healthColorLow == 0xFF0000, "HealthColorLow");
+        test::Near(c.difficultyStrength, 2.0F, 1e-6F, "DifficultyStrength clamped to 2");
+        test::Expect(c.sweetSpotSound.empty(), "SweetSpotSound=None silences it");
+        test::Expect(!c.breakShake && c.breakFlash, "BreakShake=false, BreakFlash default");
     }
     {
         const auto path = WriteTemp("lrb_bad.ini",
